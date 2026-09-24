@@ -2,10 +2,12 @@ import { describe, it, expect } from "vitest";
 import { formatCurrency, formatDate, capitalize } from "../lib/utils/formatters";
 
 describe("Formatters Utility", () => {
-  it("should format currency correctly", () => {
-    expect(formatCurrency(4.99)).toBe("$4.99");
-    expect(formatCurrency("12.50")).toBe("$12.50");
-    expect(formatCurrency(0)).toBe("$0.00");
+  it("should format currency correctly with default INR and custom symbols", () => {
+    expect(formatCurrency(4.99)).toBe("₹4.99");
+    expect(formatCurrency("12.50")).toBe("₹12.50");
+    expect(formatCurrency(0)).toBe("₹0.00");
+    expect(formatCurrency(4.99, "$")).toBe("$4.99");
+    expect(formatCurrency(19.99, "€")).toBe("€19.99");
   });
 
   it("should capitalize strings", () => {

@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useAuth } from "@/lib/firebase/auth-context";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Navbar } from "@/components/layout/Navbar";
-import { Coffee } from "lucide-react";
 
 export default function DashboardLayout({
   children,
@@ -14,6 +14,7 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const { isAuthorized, loading } = useAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAuthorized) {
@@ -23,11 +24,17 @@ export default function DashboardLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-4">
-        <div className="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 animate-bounce">
-          <Coffee className="w-6 h-6" />
+      <div className="min-h-screen bg-[#F7F5F2] flex flex-col items-center justify-center gap-4">
+        <div className="w-14 h-14 rounded-2xl bg-[#3B2522] border border-[#C88A2B]/40 relative overflow-hidden flex items-center justify-center shadow-lg animate-bounce">
+          <Image
+            src="/images/appicon_large_size_final.png"
+            alt="SolCafe Logo"
+            fill
+            className="object-cover"
+            priority
+          />
         </div>
-        <p className="text-xs font-medium text-slate-400 animate-pulse">
+        <p className="text-xs font-bold text-[#2B211E] animate-pulse tracking-wide">
           Connecting to SolCafe Manager...
         </p>
       </div>
@@ -39,11 +46,11 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-950 text-slate-100">
-      <Sidebar />
+    <div className="flex min-h-screen bg-[#F7F5F2] text-[#2B211E]">
+      <Sidebar mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0">
-        <Navbar />
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto">{children}</main>
+        <Navbar onMobileToggle={() => setMobileOpen(!mobileOpen)} />
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto">{children}</main>
       </div>
     </div>
   );

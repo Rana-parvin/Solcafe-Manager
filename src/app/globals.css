@@ -2,57 +2,128 @@
 
 @layer base {
   :root {
-    --background: #0f172a;
-    --foreground: #f8fafc;
-    --card: #1e293b;
-    --card-foreground: #f8fafc;
-    --primary: #f59e0b;
-    --primary-foreground: #0f172a;
-    --coffee-dark: #301f19;
-    --coffee-medium: #51280f;
-    --coffee-light: #8c533e;
-    --coffee-accent: #d97706;
+    /* Primary Brand Palette */
+    --primary-espresso: #3B2522;
+    --dark-espresso: #241614;
+    --deep-coffee: #2B211E;
+    --secondary-coffee: #795548;
+    --active-sidebar: #5A4031;
+    --active-sidebar-text: #F5D58A;
+
+    /* Accent & Warm Tones */
+    --primary-gold: #C88A2B;
+    --warm-gold: #D9A441;
+    --cream: #F5E1C0;
+
+    /* Surfaces & Neutrals */
+    --main-bg: #F7F5F2;
+    --secondary-bg: #FAF8F5;
+    --card-surface: #FFFFFF;
+    --border-color: #E8E1D9;
+    --border-strong: #D8CEC5;
+
+    /* Typography Text Colors */
+    --text-primary: #2B211E;
+    --text-secondary: #756B66;
+    --text-muted: #9A918B;
+
+    /* Semantic Status Colors */
+    --color-success: #3A8F5B;
+    --color-warning: #D99A2B;
+    --color-error: #C94A4A;
+    --color-info: #4D7FA8;
+
+    /* Order Pipeline Colors */
+    --status-new: #4D7FA8;
+    --status-pending: #D99A2B;
+    --status-preparing: #E07A2E;
+    --status-ready: #3A8F5B;
+    --status-completed: #2E8B82;
+    --status-cancelled: #C94A4A;
   }
 
   body {
-    background-color: #0f172a;
-    color: #f8fafc;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: var(--main-bg);
+    color: var(--text-primary);
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     min-height: 100vh;
     overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: #F7F5F2;
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 4px;
+  background: #D8CEC5;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #795548;
 }
 
-/* Subtle Smooth Glassmorphism */
-.glass-panel {
-  background: rgba(30, 41, 59, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* SolCafe Card Shadow & Border Utilities */
+.solcafe-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E8E1D9;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px -2px rgba(59, 37, 34, 0.05), 0 1px 3px 0 rgba(59, 37, 34, 0.03);
+  transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
 }
 
-.coffee-gradient {
-  background: linear-gradient(135deg, #301f19 0%, #51280f 50%, #1e293b 100%);
+.solcafe-card:hover {
+  border-color: #D8CEC5;
+  box-shadow: 0 4px 14px -3px rgba(59, 37, 34, 0.08);
 }
 
-.brand-gradient-text {
-  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 50%, #d97706 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.solcafe-card-flat {
+  background-color: #FFFFFF;
+  border: 1px solid #E8E1D9;
+  border-radius: 1rem;
+}
+
+/* SolCafe Soft Gradient & Accents */
+.solcafe-warm-header {
+  background: linear-gradient(135deg, #FAF8F5 0%, #F5E1C0 100%);
+  border-bottom: 1px solid #E8E1D9;
+}
+
+.solcafe-gold-accent {
+  background: linear-gradient(135deg, #C88A2B 0%, #D9A441 100%);
+}
+
+.solcafe-sidebar-gradient {
+  background-color: #241614;
+}
+
+/* Custom Input Focus Ring */
+.solcafe-input {
+  background-color: #FFFFFF;
+  border: 1px solid #E8E1D9;
+  color: #2B211E;
+  transition: all 0.15s ease-in-out;
+}
+
+.solcafe-input::placeholder {
+  color: #9A918B;
+}
+
+.solcafe-input:focus {
+  outline: none;
+  border-color: #C88A2B;
+  box-shadow: 0 0 0 3px rgba(200, 138, 43, 0.15);
+}
+
+/* Smooth Transitions */
+.transition-solcafe {
+  transition-property: color, background-color, border-color, box-shadow, transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
 }

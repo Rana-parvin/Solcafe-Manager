@@ -7,6 +7,7 @@ import { UserProfile, UserRole } from "@/types";
 import { useAuth } from "@/lib/firebase/auth-context";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
 
 export default function StaffManagementPage() {
   const { isAdmin } = useAuth();
@@ -38,28 +39,28 @@ export default function StaffManagementPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100">Staff & Role Access Control (RBAC)</h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Manage administrative and staff access permissions enforced via Firestore and server rules.
+          <h1 className="text-2xl font-extrabold text-[#2B211E]">Staff & Role Access Control (RBAC)</h1>
+          <p className="text-xs text-[#756B66] mt-1">
+            Manage administrative and staff access permissions enforced via Cloud Firestore and server rules.
           </p>
         </div>
       </div>
 
       {!isAdmin && (
-        <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center gap-3 text-amber-400 text-xs">
-          <ShieldAlert className="w-5 h-5 shrink-0" />
+        <div className="p-4 rounded-2xl bg-[#FAF8F5] border border-[#D9A441]/40 flex items-center gap-3 text-[#3B2522] text-xs">
+          <ShieldAlert className="w-5 h-5 shrink-0 text-[#C88A2B]" />
           <span>
             You are logged in as a <strong>Staff</strong> member. Role modification requires a Master Admin account.
           </span>
         </div>
       )}
 
-      {/* Search */}
-      <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800 flex justify-end">
+      {/* Search Bar Card */}
+      <div className="bg-[#FAF8F5] p-4 rounded-2xl border border-[#E8E1D9] flex justify-end">
         <div className="w-full md:w-64">
           <Input
             placeholder="Search staff members..."
@@ -70,45 +71,45 @@ export default function StaffManagementPage() {
         </div>
       </div>
 
-      {/* Staff Table */}
-      <div className="bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      {/* Staff Table Card */}
+      <Card className="p-0 overflow-hidden">
         {loading ? (
-          <div className="p-12 text-center text-slate-500 text-xs animate-pulse">
-            Loading user permissions from Firestore...
+          <div className="p-12 text-center text-[#9A918B] text-xs animate-pulse">
+            Loading user permissions from Cloud Firestore...
           </div>
         ) : staffMembers.length === 0 ? (
           <div className="p-12 text-center">
-            <ShieldCheck className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-            <p className="text-sm font-medium text-slate-300">No staff members found</p>
+            <ShieldCheck className="w-10 h-10 text-[#9A918B] mx-auto mb-3" />
+            <p className="text-sm font-bold text-[#2B211E]">No staff members found</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-950/80 text-slate-400 border-b border-slate-800">
+              <thead className="bg-[#FAF8F5] text-[#756B66] border-b border-[#E8E1D9] font-bold">
                 <tr>
-                  <th className="py-3.5 px-4">User</th>
+                  <th className="py-3.5 px-4">User Details</th>
                   <th className="py-3.5 px-4">Email</th>
                   <th className="py-3.5 px-4">UID</th>
                   <th className="py-3.5 px-4">Current Role</th>
                   <th className="py-3.5 px-4 text-right">Assign Role</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 text-slate-200">
+              <tbody className="divide-y divide-[#E8E1D9] text-[#2B211E]">
                 {staffMembers.map((member) => (
-                  <tr key={member.uid} className="hover:bg-slate-800/40 transition-colors">
-                    <td className="py-3.5 px-4 font-semibold text-slate-100 flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-amber-400 font-bold text-[11px]">
+                  <tr key={member.uid} className="hover:bg-[#FAF8F5]/60 transition-colors">
+                    <td className="py-3.5 px-4 font-bold text-[#2B211E] flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-[#FAF8F5] border border-[#E8E1D9] flex items-center justify-center text-[#3B2522] font-extrabold text-[11px]">
                         {member.displayName ? member.displayName.charAt(0).toUpperCase() : "U"}
                       </div>
                       <span>{member.displayName}</span>
                     </td>
-                    <td className="py-3.5 px-4 text-slate-300">{member.email || "N/A"}</td>
-                    <td className="py-3.5 px-4 font-mono text-[11px] text-slate-400">
+                    <td className="py-3.5 px-4 text-[#756B66]">{member.email || "N/A"}</td>
+                    <td className="py-3.5 px-4 font-mono text-[11px] text-[#756B66]">
                       {member.uid}
                     </td>
                     <td className="py-3.5 px-4">
                       {member.role === "admin" ? (
-                        <Badge variant="amber">Admin</Badge>
+                        <Badge variant="gold">Admin</Badge>
                       ) : member.role === "staff" ? (
                         <Badge variant="purple">Staff</Badge>
                       ) : (
@@ -120,7 +121,7 @@ export default function StaffManagementPage() {
                         value={member.role || "customer"}
                         onChange={(e) => handleRoleChange(member.uid, e.target.value as UserRole)}
                         disabled={!isAdmin}
-                        className="bg-slate-950 border border-slate-700 text-xs text-slate-200 rounded px-2.5 py-1 focus:outline-none focus:border-amber-500 disabled:opacity-50"
+                        className="bg-[#FFFFFF] border border-[#E8E1D9] text-xs text-[#2B211E] font-medium rounded-lg px-2.5 py-1 focus:outline-none focus:ring-2 focus:ring-[#C88A2B]/40 disabled:opacity-50"
                       >
                         <option value="admin">Admin</option>
                         <option value="staff">Staff</option>
@@ -133,7 +134,7 @@ export default function StaffManagementPage() {
             </table>
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

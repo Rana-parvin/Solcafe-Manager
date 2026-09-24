@@ -4,7 +4,7 @@ import { normalizeOrder } from "../lib/firestore/orders";
 import { normalizePayment } from "../lib/firestore/payments";
 
 describe("Firestore Data Models Compatibility", () => {
-  it("should normalize Flutter menu item document", () => {
+  it("should normalize Flutter menu item document and availableQuantity", () => {
     const rawDoc = {
       name: "Espresso Macchiato",
       details: "Rich espresso topped with velvety foam",
@@ -12,6 +12,7 @@ describe("Firestore Data Models Compatibility", () => {
       imagePath: "assets/images/espresso.jpg",
       category: "coffee",
       sizes: ["S", "M"],
+      availableQuantity: 25,
     };
 
     const item = normalizeMenuItem("item-101", rawDoc);
@@ -21,6 +22,12 @@ describe("Firestore Data Models Compatibility", () => {
     expect(item.price).toBe("3.50");
     expect(item.category).toBe("coffee");
     expect(item.sizes).toEqual(["S", "M"]);
+    expect(item.availableQuantity).toBe(25);
+    expect(item.isAvailable).toBe(true);
+
+    const zeroStockItem = normalizeMenuItem("item-102", { ...rawDoc, availableQuantity: 0 });
+    expect(zeroStockItem.availableQuantity).toBe(0);
+    expect(zeroStockItem.isAvailable).toBe(false);
   });
 
   it("should normalize Flutter making_orders document", () => {

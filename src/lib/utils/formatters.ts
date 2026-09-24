@@ -1,10 +1,14 @@
-export function formatCurrency(value: string | number): string {
-  const numeric = typeof value === "number" ? value : parseFloat(value) || 0;
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
+export function formatCurrency(
+  value: string | number,
+  symbol: string = "₹",
+  currencyCode: string = "INR"
+): string {
+  const numeric = typeof value === "number" ? value : parseFloat(String(value)) || 0;
+  const formattedNumber = numeric.toLocaleString("en-US", {
     minimumFractionDigits: 2,
-  }).format(numeric);
+    maximumFractionDigits: 2,
+  });
+  return `${symbol}${formattedNumber}`;
 }
 
 export function formatDate(date: Date | string | number | undefined): string {

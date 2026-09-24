@@ -1,3 +1,5 @@
+export * from "./settings";
+
 export type UserRole = "admin" | "staff" | "customer";
 
 export interface UserProfile {
@@ -18,6 +20,7 @@ export interface MenuItem {
   category: string;
   sizes: string[];
   isAvailable?: boolean;
+  availableQuantity?: number;
 }
 
 export type OrderStatus = "pending" | "preparing" | "ready" | "completed" | "cancelled";

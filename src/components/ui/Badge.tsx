@@ -3,7 +3,7 @@ import { clsx } from "clsx";
 
 interface BadgeProps {
   children: React.ReactNode;
-  variant?: "amber" | "emerald" | "blue" | "rose" | "slate" | "purple";
+  variant?: "amber" | "emerald" | "blue" | "rose" | "slate" | "purple" | "teal" | "gold" | "orange";
   className?: string;
 }
 
@@ -13,18 +13,21 @@ export const Badge: React.FC<BadgeProps> = ({
   className,
 }) => {
   const variants = {
-    amber: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-    emerald: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-    blue: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-    rose: "bg-rose-500/10 text-rose-400 border-rose-500/20",
-    slate: "bg-slate-700/30 text-slate-300 border-slate-700/50",
-    purple: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+    amber: "bg-[#FDF3E3] text-[#9E691A] border-[#F5D58A]",
+    gold: "bg-[#F5E1C0] text-[#8A5B15] border-[#E5C992]",
+    emerald: "bg-[#EAF5ED] text-[#276A42] border-[#B8E3C9]",
+    blue: "bg-[#EBF3FA] text-[#2A587F] border-[#B5D3EC]",
+    rose: "bg-[#FDE8E8] text-[#A82A2A] border-[#F7B6B6]",
+    slate: "bg-[#FAF8F5] text-[#756B66] border-[#E8E1D9]",
+    purple: "bg-[#F3EBF9] text-[#6B3B91] border-[#D6BBEB]",
+    teal: "bg-[#E6F4F1] text-[#1E6C64] border-[#B0E2DC]",
+    orange: "bg-[#FDF0E6] text-[#A84B15] border-[#F7CDAE]",
   };
 
   return (
     <span
       className={clsx(
-        "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border capitalize",
+        "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border capitalize tracking-tight",
         variants[variant],
         className
       )}

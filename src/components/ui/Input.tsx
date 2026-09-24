@@ -20,24 +20,24 @@ export const Input: React.FC<InputProps> = ({
   return (
     <div className="w-full space-y-1.5">
       {label && (
-        <label htmlFor={inputId} className="block text-xs font-medium text-slate-300">
+        <label htmlFor={inputId} className="block text-xs font-semibold text-[#2B211E]">
           {label}
         </label>
       )}
       <div className="relative flex items-center">
-        {icon && <div className="absolute left-3 text-slate-400 pointer-events-none">{icon}</div>}
+        {icon && <div className="absolute left-3 text-[#756B66] pointer-events-none">{icon}</div>}
         <input
           id={inputId}
           className={clsx(
-            "w-full bg-slate-900/90 border border-slate-700/80 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/80 transition-all duration-150",
+            "w-full bg-white border border-[#E8E1D9] rounded-lg px-3.5 py-2 text-sm text-[#2B211E] placeholder-[#9A918B] focus:outline-none focus:border-[#C88A2B] focus:ring-2 focus:ring-[#C88A2B]/20 transition-all duration-150",
             icon && "pl-9",
-            error && "border-rose-500 focus:ring-rose-500/50",
+            error && "border-[#C94A4A] focus:ring-[#C94A4A]/20",
             className
           )}
           {...props}
         />
       </div>
-      {error && <p className="text-xs text-rose-400">{error}</p>}
+      {error && <p className="text-xs text-[#C94A4A] font-medium">{error}</p>}
     </div>
   );
 };

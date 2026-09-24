@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Coffee, Lock, Mail, ShieldAlert, Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/firebase/auth-context";
 import { Input } from "@/components/ui/Input";
@@ -47,27 +48,34 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center p-4 relative overflow-hidden">
-      {/* Background Ambient Glow */}
-      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-amber-600/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen bg-[#F7F5F2] flex flex-col justify-center items-center p-4 relative overflow-hidden">
+      {/* Background Subtle Warm Glows */}
+      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-[#C88A2B]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-[#F5E1C0]/40 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-2xl p-8 shadow-2xl backdrop-blur-xl relative z-10">
+      <div className="w-full max-w-md bg-[#FFFFFF] border border-[#E8E1D9] rounded-2xl p-8 shadow-xl relative z-10">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 mx-auto flex items-center justify-center shadow-lg shadow-amber-500/20 mb-4">
-            <Coffee className="w-8 h-8 text-slate-950" />
+          <div className="w-16 h-16 rounded-2xl bg-[#241614] border border-[#C88A2B]/40 relative overflow-hidden mx-auto flex items-center justify-center shadow-md mb-4 p-2">
+            <Image
+              src="/images/appicon_large_size_final.png"
+              alt="SolCafe Manager Logo"
+              width={56}
+              height={56}
+              className="object-contain"
+              priority
+            />
           </div>
-          <h1 className="text-2xl font-bold text-slate-100 tracking-tight">
-            SolCafe <span className="text-amber-500">Manager</span>
+          <h1 className="text-2xl font-extrabold text-[#2B211E] tracking-tight">
+            SolCafe <span className="text-[#C88A2B]">MANAGER</span>
           </h1>
-          <p className="text-xs text-slate-400 mt-1.5">
+          <p className="text-xs text-[#756B66] mt-1.5 font-medium">
             Staff & Administration Portal (Firebase solcafe-e700b)
           </p>
         </div>
 
         {error && (
-          <div className="mb-6 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-start gap-3 text-rose-400 text-xs">
+          <div className="mb-6 p-3.5 rounded-xl bg-[#C94A4A]/10 border border-[#C94A4A]/20 flex items-start gap-3 text-[#C94A4A] text-xs font-semibold">
             <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
@@ -80,7 +88,7 @@ export default function LoginPage() {
             placeholder="admin@solcafe.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            icon={<Mail className="w-4 h-4" />}
+            icon={<Mail className="w-4 h-4 text-[#756B66]" />}
             required
           />
           <Input
@@ -89,7 +97,7 @@ export default function LoginPage() {
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            icon={<Lock className="w-4 h-4" />}
+            icon={<Lock className="w-4 h-4 text-[#756B66]" />}
             required
           />
 
@@ -99,9 +107,9 @@ export default function LoginPage() {
         </form>
 
         {/* Demo Fast Evaluation Section */}
-        <div className="mt-8 pt-6 border-t border-slate-800/80 text-center">
-          <p className="text-xs font-medium text-slate-400 mb-3 flex items-center justify-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Demo Quick Evaluation Sign-In
+        <div className="mt-8 pt-6 border-t border-[#E8E1D9] text-center">
+          <p className="text-xs font-bold text-[#756B66] mb-3 flex items-center justify-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-[#C88A2B]" /> Demo Quick Evaluation Sign-In
           </p>
           <div className="grid grid-cols-2 gap-3">
             <Button

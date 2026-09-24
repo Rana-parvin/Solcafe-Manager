@@ -22,10 +22,13 @@ import {
 } from "@/lib/firestore/products";
 import { MenuItem, FLUTTER_MENU_CATEGORIES } from "@/types";
 import { formatCurrency } from "@/lib/utils/formatters";
+import { subscribeToCafeSettings } from "@/lib/firestore/settings";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
+import { Card } from "@/components/ui/Card";
+import { ImageUploader } from "@/components/ui/ImageUploader";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<MenuItem[]>([]);
@@ -38,23 +41,36 @@ export default function ProductsPage() {
   const [editingProduct, setEditingProduct] = useState<MenuItem | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
+  // Currency & Settings State
+  const [currencySymbol, setCurrencySymbol] = useState("₹");
+  const [currencyCode, setCurrencyCode] = useState("INR");
+
   // Form State
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("coffee");
   const [image, setImage] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [availableQuantity, setAvailableQuantity] = useState<number>(0);
   const [sizes, setSizes] = useState<string[]>(["S", "M", "L"]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = subscribeToProducts((items) => {
+    const unsubscribeProducts = subscribeToProducts((items) => {
       setProducts(items);
       setLoading(false);
     }, selectedCategory);
 
-    return () => unsubscribe();
+    const unsubscribeSettings = subscribeToCafeSettings((data) => {
+      setCurrencySymbol(data.general.currencySymbol || data.payment.currencySymbol || "₹");
+      setCurrencyCode(data.general.currency || data.payment.currency || "INR");
+    });
+
+    return () => {
+      unsubscribeProducts();
+      unsubscribeSettings();
+    };
   }, [selectedCategory]);
 
   const handleOpenCreateModal = () => {
@@ -63,7 +79,9 @@ export default function ProductsPage() {
     setDescription("");
     setPrice("4.99");
     setCategory("coffee");
-    setImage("https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=500&auto=format&fit=crop&q=60");
+    setImage("/images/appicon_large_size_final.png");
+    setSelectedFile(null);
+    setAvailableQuantity(0);
     setSizes(["S", "M", "L"]);
     setIsModalOpen(true);
   };
@@ -74,7 +92,9 @@ export default function ProductsPage() {
     setDescription(product.description);
     setPrice(String(product.price));
     setCategory(product.category || "coffee");
-    setImage(product.image);
+    setImage(product.image || "/images/appicon_large_size_final.png");
+    setSelectedFile(null);
+    setAvailableQuantity(product.availableQuantity !== undefined ? product.availableQuantity : (product.isAvailable !== false ? 10 : 0));
     setSizes(product.sizes || ["S", "M", "L"]);
     setIsModalOpen(true);
   };
@@ -84,6 +104,8 @@ export default function ProductsPage() {
     if (!title || !price) return;
     setIsSubmitting(true);
 
+    const qty = Math.max(0, Math.floor(availableQuantity));
+
     try {
       if (editingProduct) {
         await updateProduct(editingProduct.id, {
@@ -91,8 +113,10 @@ export default function ProductsPage() {
           description,
           price,
           category,
-          image,
+          image: image || "/images/appicon_large_size_final.png",
           sizes,
+          availableQuantity: qty,
+          isAvailable: qty > 0,
         });
       } else {
         await createProduct({
@@ -100,9 +124,10 @@ export default function ProductsPage() {
           description,
           price,
           category,
-          image,
+          image: image || "/images/appicon_large_size_final.png",
           sizes,
-          isAvailable: true,
+          availableQuantity: qty,
+          isAvailable: qty > 0,
         });
       }
       setIsModalOpen(false);
@@ -122,48 +147,6 @@ export default function ProductsPage() {
     }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploadingImage(true);
-    try {
-      const res = await fetch("/api/cloudinary/sign");
-      const signData = await res.json();
-
-      if (!signData.cloudName || !signData.apiKey) {
-        // Fallback to demo uploaded image URL
-        setImage("https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=500&auto=format&fit=crop&q=60");
-        setUploadingImage(false);
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("api_key", signData.apiKey);
-      formData.append("timestamp", signData.timestamp.toString());
-      formData.append("signature", signData.signature);
-      formData.append("folder", signData.folder);
-
-      const uploadRes = await fetch(
-        `https://api.cloudinary.com/v1_1/${signData.cloudName}/image/upload`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-      const data = await uploadRes.json();
-      if (data.secure_url) {
-        setImage(data.secure_url);
-      }
-    } catch (err) {
-      console.warn("Cloudinary upload fallback:", err);
-      setImage("https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=500&auto=format&fit=crop&q=60");
-    } finally {
-      setUploadingImage(false);
-    }
-  };
-
   const filteredProducts = products.filter((p) => {
     const matchesSearch =
       p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -172,13 +155,13 @@ export default function ProductsPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100">Product Catalog Management</h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Manage SolCafe menu items in Firestore collection `items` shared with Flutter app.
+          <h1 className="text-2xl font-extrabold text-[#2B211E]">Product Catalog Management</h1>
+          <p className="text-xs text-[#756B66] mt-1">
+            Manage SolCafe menu items in Cloud Firestore collection `items` shared with Flutter app.
           </p>
         </div>
         <Button onClick={handleOpenCreateModal} className="gap-2">
@@ -186,15 +169,15 @@ export default function ProductsPage() {
         </Button>
       </div>
 
-      {/* Filter Tabs & Search Bar */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+      {/* Filter Tabs & Search Bar Card */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-[#FAF8F5] p-4 rounded-2xl border border-[#E8E1D9]">
         <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
           <button
             onClick={() => setSelectedCategory("All")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
               selectedCategory === "All"
-                ? "bg-amber-500 text-slate-950 font-semibold"
-                : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                ? "bg-[#3B2522] text-[#FFFFFF] shadow-sm"
+                : "bg-[#FFFFFF] text-[#756B66] hover:text-[#2B211E] border border-[#E8E1D9]"
             }`}
           >
             All Items
@@ -203,10 +186,10 @@ export default function ProductsPage() {
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-all ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold capitalize transition-all ${
                 selectedCategory === cat
-                  ? "bg-amber-500 text-slate-950 font-semibold"
-                  : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                  ? "bg-[#3B2522] text-[#FFFFFF] shadow-sm"
+                  : "bg-[#FFFFFF] text-[#756B66] hover:text-[#2B211E] border border-[#E8E1D9]"
               }`}
             >
               {cat}
@@ -224,39 +207,40 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* Products Table */}
-      <div className="bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      {/* Products Table Card */}
+      <Card className="p-0 overflow-hidden">
         {loading ? (
-          <div className="p-12 text-center text-slate-500 text-xs animate-pulse">
-            Loading products from Firestore `items` collection...
+          <div className="p-12 text-center text-[#9A918B] text-xs animate-pulse">
+            Loading products from Cloud Firestore `items` collection...
           </div>
         ) : filteredProducts.length === 0 ? (
           <div className="p-12 text-center">
-            <Coffee className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-            <p className="text-sm font-medium text-slate-300">No menu items found</p>
-            <p className="text-xs text-slate-500 mt-1">
+            <Coffee className="w-10 h-10 text-[#9A918B] mx-auto mb-3" />
+            <p className="text-sm font-bold text-[#2B211E]">No menu items found</p>
+            <p className="text-xs text-[#756B66] mt-1">
               Add products or adjust category filters to inspect menu items.
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-950/80 text-slate-400 border-b border-slate-800">
+              <thead className="bg-[#FAF8F5] text-[#756B66] border-b border-[#E8E1D9] font-bold">
                 <tr>
-                  <th className="py-3.5 px-4">Item</th>
+                  <th className="py-3.5 px-4">Item Details</th>
                   <th className="py-3.5 px-4">Category</th>
-                  <th className="py-3.5 px-4">Price</th>
+                  <th className="py-3.5 px-4">Price ({currencySymbol})</th>
+                  <th className="py-3.5 px-4">Available Quantity</th>
                   <th className="py-3.5 px-4">Sizes</th>
                   <th className="py-3.5 px-4">Availability</th>
                   <th className="py-3.5 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 text-slate-200">
+              <tbody className="divide-y divide-[#E8E1D9] text-[#2B211E]">
                 {filteredProducts.map((product) => (
-                  <tr key={product.id} className="hover:bg-slate-800/40 transition-colors">
+                  <tr key={product.id} className="hover:bg-[#FAF8F5]/60 transition-colors">
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-lg bg-slate-800 relative overflow-hidden border border-slate-700/60 shrink-0">
+                        <div className="w-11 h-11 rounded-xl bg-[#FAF8F5] relative overflow-hidden border border-[#E8E1D9] shrink-0">
                           <Image
                             src={product.image}
                             alt={product.title}
@@ -267,25 +251,38 @@ export default function ProductsPage() {
                           />
                         </div>
                         <div>
-                          <p className="font-semibold text-slate-100">{product.title}</p>
-                          <p className="text-[11px] text-slate-400 line-clamp-1 max-w-xs">
+                          <p className="font-extrabold text-[#2B211E]">{product.title}</p>
+                          <p className="text-[11px] text-[#756B66] line-clamp-1 max-w-xs">
                             {product.description || "No detailed description provided."}
                           </p>
                         </div>
                       </div>
                     </td>
                     <td className="py-3.5 px-4 capitalize">
-                      <Badge variant="amber">{product.category}</Badge>
+                      <Badge variant="gold">{product.category}</Badge>
                     </td>
-                    <td className="py-3.5 px-4 font-bold text-amber-400">
-                      {formatCurrency(product.price)}
+                    <td className="py-3.5 px-4 font-extrabold text-[#3B2522]">
+                      {formatCurrency(product.price, currencySymbol, currencyCode)}
+                    </td>
+                    <td className="py-3.5 px-4 font-mono font-bold">
+                      {(product.availableQuantity ?? 0) > 0 ? (
+                        <span className="text-[#3A8F5B] flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#3A8F5B]" />
+                          {product.availableQuantity} units
+                        </span>
+                      ) : (
+                        <span className="text-[#C94A4A] flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#C94A4A] animate-pulse" />
+                          0 units (Out of Stock)
+                        </span>
+                      )}
                     </td>
                     <td className="py-3.5 px-4">
                       <div className="flex gap-1">
                         {product.sizes.map((s) => (
                           <span
                             key={s}
-                            className="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] text-slate-300 font-mono border border-slate-700"
+                            className="px-2 py-0.5 rounded-md bg-[#FAF8F5] text-[10px] text-[#2B211E] font-mono border border-[#E8E1D9] font-bold"
                           >
                             {s}
                           </span>
@@ -294,16 +291,16 @@ export default function ProductsPage() {
                     </td>
                     <td className="py-3.5 px-4">
                       <button
-                        onClick={() => toggleProductAvailability(product.id, !!product.isAvailable)}
+                        onClick={() => toggleProductAvailability(product.id, !!product.isAvailable, product.availableQuantity)}
                         className="flex items-center gap-1.5 text-xs focus:outline-none"
                       >
-                        {product.isAvailable !== false ? (
+                        {product.isAvailable !== false && (product.availableQuantity ?? 0) > 0 ? (
                           <Badge variant="emerald" className="cursor-pointer">
                             <Eye className="w-3 h-3 mr-1" /> Available
                           </Badge>
                         ) : (
                           <Badge variant="rose" className="cursor-pointer">
-                            <EyeOff className="w-3 h-3 mr-1" /> Disabled
+                            <EyeOff className="w-3 h-3 mr-1" /> Out of Stock
                           </Badge>
                         )}
                       </button>
@@ -316,7 +313,7 @@ export default function ProductsPage() {
                           onClick={() => handleOpenEditModal(product)}
                           title="Edit Product"
                         >
-                          <Edit2 className="w-4 h-4 text-amber-400" />
+                          <Edit2 className="w-4 h-4 text-[#C88A2B]" />
                         </Button>
                         <Button
                           size="sm"
@@ -324,7 +321,7 @@ export default function ProductsPage() {
                           onClick={() => setDeleteConfirmId(product.id)}
                           title="Delete Product"
                         >
-                          <Trash2 className="w-4 h-4 text-rose-400" />
+                          <Trash2 className="w-4 h-4 text-[#C94A4A]" />
                         </Button>
                       </div>
                     </td>
@@ -334,7 +331,7 @@ export default function ProductsPage() {
             </table>
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Add / Edit Product Modal */}
       <Modal
@@ -353,31 +350,46 @@ export default function ProductsPage() {
           />
 
           <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-slate-300">Description</label>
+            <label className="block text-xs font-bold text-[#2B211E]">Description</label>
             <textarea
               rows={3}
               placeholder="Rich espresso brewed with steamed milk and hazelnut syrup..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+              className="w-full bg-[#FFFFFF] border border-[#E8E1D9] rounded-xl p-3 text-xs text-[#2B211E] focus:outline-none focus:ring-2 focus:ring-[#C88A2B]/40"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Input
-              label="Price ($)"
+              label={`Price (${currencySymbol})`}
               type="text"
               placeholder="4.99"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
               required
             />
+
+            <Input
+              label="Available Quantity (Stock)"
+              type="number"
+              min="0"
+              step="1"
+              placeholder="0"
+              value={availableQuantity}
+              onChange={(e) => {
+                const parsed = parseInt(e.target.value, 10);
+                setAvailableQuantity(isNaN(parsed) ? 0 : Math.max(0, parsed));
+              }}
+              required
+            />
+
             <div className="space-y-1.5">
-              <label className="block text-xs font-medium text-slate-300">Category</label>
+              <label className="block text-xs font-bold text-[#2B211E]">Category</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500/50 capitalize"
+                className="w-full bg-[#FFFFFF] border border-[#E8E1D9] rounded-xl p-2.5 text-xs text-[#2B211E] focus:outline-none focus:ring-2 focus:ring-[#C88A2B]/40 capitalize font-medium"
               >
                 {FLUTTER_MENU_CATEGORIES.map((cat) => (
                   <option key={cat} value={cat}>
@@ -388,42 +400,21 @@ export default function ProductsPage() {
             </div>
           </div>
 
-          {/* Cloudinary Image Upload & Preview */}
-          <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-slate-300">Product Image (Cloudinary Storage)</label>
-            <div className="flex items-center gap-3">
-              <div className="w-16 h-16 rounded-xl bg-slate-800 border border-slate-700 relative overflow-hidden shrink-0">
-                {image ? (
-                  <Image src={image} alt="Preview" fill className="object-cover" unoptimized />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-slate-600">
-                    <Coffee className="w-6 h-6" />
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 space-y-2">
-                <Input
-                  type="text"
-                  placeholder="https://res.cloudinary.com/..."
-                  value={image}
-                  onChange={(e) => setImage(e.target.value)}
-                />
-                <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-amber-400 cursor-pointer border border-slate-700 transition-colors">
-                  <Upload className="w-3.5 h-3.5" />
-                  {uploadingImage ? "Uploading to Cloudinary..." : "Upload via Cloudinary"}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                    disabled={uploadingImage}
-                  />
-                </label>
-              </div>
-            </div>
-          </div>
+          {/* Cloudinary Image Upload & Device File Picker */}
+          <ImageUploader
+            label="Product Image (Cloudinary Storage)"
+            description="Select an image from your device to display for this SolCafe product."
+            value={image}
+            onChange={(url, file) => {
+              if (url !== undefined) setImage(url);
+              if (file !== undefined) setSelectedFile(file);
+            }}
+            onFileSelect={(file) => setSelectedFile(file)}
+            folder="solcafe_products"
+            defaultImage="/images/appicon_large_size_final.png"
+          />
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#E8E1D9]">
             <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)}>
               Cancel
             </Button>
@@ -442,8 +433,8 @@ export default function ProductsPage() {
         maxWidth="sm"
       >
         <div className="space-y-4 text-xs">
-          <p className="text-slate-300">
-            Are you sure you want to delete this menu product from Firestore? This action will remove it from the SolCafe customer mobile application.
+          <p className="text-[#756B66]">
+            Are you sure you want to delete this menu product from Cloud Firestore? This action will remove it from the SolCafe customer mobile application.
           </p>
           <div className="flex justify-end gap-3 pt-2">
             <Button variant="ghost" onClick={() => setDeleteConfirmId(null)}>

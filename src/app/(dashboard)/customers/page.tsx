@@ -6,6 +6,7 @@ import { subscribeToUsers } from "@/lib/firestore/users";
 import { UserProfile } from "@/types";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
 
 export default function CustomersPage() {
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -30,19 +31,19 @@ export default function CustomersPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100">Customer Directory</h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <h1 className="text-2xl font-extrabold text-[#2B211E]">Customer Directory</h1>
+          <p className="text-xs text-[#756B66] mt-1">
             SolCafe customer accounts registered via Flutter mobile app (`users` collection).
           </p>
         </div>
       </div>
 
-      {/* Search */}
-      <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800 flex justify-end">
+      {/* Search Bar Card */}
+      <div className="bg-[#FAF8F5] p-4 rounded-2xl border border-[#E8E1D9] flex justify-end">
         <div className="w-full md:w-64">
           <Input
             placeholder="Search customers..."
@@ -53,24 +54,24 @@ export default function CustomersPage() {
         </div>
       </div>
 
-      {/* Customers Table */}
-      <div className="bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      {/* Customers Table Card */}
+      <Card className="p-0 overflow-hidden">
         {loading ? (
-          <div className="p-12 text-center text-slate-500 text-xs animate-pulse">
-            Loading customers from Firestore `users` collection...
+          <div className="p-12 text-center text-[#9A918B] text-xs animate-pulse">
+            Loading customers from Cloud Firestore `users` collection...
           </div>
         ) : filteredCustomers.length === 0 ? (
           <div className="p-12 text-center">
-            <Users className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-            <p className="text-sm font-medium text-slate-300">No customer records found</p>
-            <p className="text-xs text-slate-500 mt-1">
+            <Users className="w-10 h-10 text-[#9A918B] mx-auto mb-3" />
+            <p className="text-sm font-bold text-[#2B211E]">No customer records found</p>
+            <p className="text-xs text-[#756B66] mt-1">
               Customer profiles registered in the SolCafe Flutter app will list here.
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-950/80 text-slate-400 border-b border-slate-800">
+              <thead className="bg-[#FAF8F5] text-[#756B66] border-b border-[#E8E1D9] font-bold">
                 <tr>
                   <th className="py-3.5 px-4">Customer Name</th>
                   <th className="py-3.5 px-4">Email Address</th>
@@ -79,28 +80,28 @@ export default function CustomersPage() {
                   <th className="py-3.5 px-4">Role</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 text-slate-200">
+              <tbody className="divide-y divide-[#E8E1D9] text-[#2B211E]">
                 {filteredCustomers.map((customer) => (
-                  <tr key={customer.uid} className="hover:bg-slate-800/40 transition-colors">
-                    <td className="py-3.5 px-4 font-semibold text-slate-100 flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-amber-400 font-bold text-[11px]">
+                  <tr key={customer.uid} className="hover:bg-[#FAF8F5]/60 transition-colors">
+                    <td className="py-3.5 px-4 font-bold text-[#2B211E] flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-[#FAF8F5] border border-[#E8E1D9] flex items-center justify-center text-[#3B2522] font-extrabold text-[11px]">
                         {customer.displayName ? customer.displayName.charAt(0).toUpperCase() : "C"}
                       </div>
                       <span>{customer.displayName}</span>
                     </td>
-                    <td className="py-3.5 px-4 text-slate-300">
+                    <td className="py-3.5 px-4 text-[#756B66]">
                       <div className="flex items-center gap-1.5">
-                        <Mail className="w-3.5 h-3.5 text-slate-500" />
+                        <Mail className="w-3.5 h-3.5 text-[#9A918B]" />
                         <span>{customer.email || "N/A"}</span>
                       </div>
                     </td>
-                    <td className="py-3.5 px-4 text-slate-400">
+                    <td className="py-3.5 px-4 text-[#756B66]">
                       <div className="flex items-center gap-1.5">
-                        <Phone className="w-3.5 h-3.5 text-slate-500" />
+                        <Phone className="w-3.5 h-3.5 text-[#9A918B]" />
                         <span>{customer.phoneNumber || "N/A"}</span>
                       </div>
                     </td>
-                    <td className="py-3.5 px-4 font-mono text-[11px] text-slate-400">
+                    <td className="py-3.5 px-4 font-mono text-[11px] text-[#756B66]">
                       {customer.uid}
                     </td>
                     <td className="py-3.5 px-4">
@@ -112,7 +113,7 @@ export default function CustomersPage() {
             </table>
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

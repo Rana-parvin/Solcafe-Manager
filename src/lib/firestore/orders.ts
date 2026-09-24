@@ -32,7 +32,7 @@ export function normalizeOrder(id: string, data: Record<string, any>): Order {
     userId: data.userid || data.userId || "anonymous",
     itemId: data["item id"] || data.itemId || "",
     itemName: data.itemname || data.name || "SolCafe Order Item",
-    image: data.image || "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=500&auto=format&fit=crop&q=60",
+    image: data.image || "/images/appicon_large_size_final.png",
     size: data.size || "M",
     quantity: typeof data.quantity === "number" ? data.quantity : parseInt(data.quantity || "1", 10),
     totalPrice,
