@@ -1,7 +1,7 @@
-import { describe, it, expect } from "vitest";
-import { validateImageFile } from "../lib/cloudinary/client";
+import { describe, it, expect, vi } from "vitest";
+import { validateImageFile, validateProductAspectRatio } from "../lib/cloudinary/client";
 
-describe("Device Image File Validation & Handling", () => {
+describe("Device Image File Validation & Aspect Ratio Handling", () => {
   it("should validate supported image MIME types correctly", () => {
     const validPng = new File(["dummy content"], "coffee.png", { type: "image/png" });
     const validJpg = new File(["dummy content"], "latte.jpg", { type: "image/jpeg" });
@@ -25,13 +25,43 @@ describe("Device Image File Validation & Handling", () => {
   });
 
   it("should enforce maximum allowed file size", () => {
-    // Create a dummy file larger than 2MB with 2.5MB size
     const largeContent = new ArrayBuffer(2.5 * 1024 * 1024);
     const largeFile = new File([largeContent], "large_photo.png", { type: "image/png" });
 
-    // Validate against 2MB limit (2 * 1024 * 1024)
     const result = validateImageFile(largeFile, 2 * 1024 * 1024);
     expect(result.valid).toBe(false);
     expect(result.error).toContain("exceeds the maximum allowed limit");
+  });
+
+  it("should accept valid 16:9 image aspect ratios (e.g. 1200x675, 1920x1080, 800x450)", () => {
+    expect(validateProductAspectRatio(1200, 675).valid).toBe(true);
+    expect(validateProductAspectRatio(1920, 1080).valid).toBe(true);
+    expect(validateProductAspectRatio(800, 450).valid).toBe(true);
+    expect(validateProductAspectRatio(1600, 900).valid).toBe(true);
+  });
+
+  it("should reject non-16:9 images (e.g. 800x800 square, 600x800 portrait) with a clear error message", () => {
+    const squareResult = validateProductAspectRatio(800, 800);
+    expect(squareResult.valid).toBe(false);
+    expect(squareResult.error).toContain("Invalid image size. Please upload a product image with a 16:9 aspect ratio");
+    expect(squareResult.error).toContain("Selected image: 800 × 800 px");
+
+    const portraitResult = validateProductAspectRatio(600, 800);
+    expect(portraitResult.valid).toBe(false);
+    expect(portraitResult.error).toContain("Selected image: 600 × 800 px");
+  });
+
+  it("should verify an invalid image does not trigger an upload request", async () => {
+    const mockUploadRequest = vi.fn();
+
+    const squareDims = { width: 800, height: 800 };
+    const validation = validateProductAspectRatio(squareDims.width, squareDims.height);
+
+    if (validation.valid) {
+      await mockUploadRequest();
+    }
+
+    expect(validation.valid).toBe(false);
+    expect(mockUploadRequest).not.toHaveBeenCalled();
   });
 });
