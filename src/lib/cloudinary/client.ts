@@ -1,6 +1,8 @@
 export interface ImageValidationResult {
   valid: boolean;
   error?: string;
+  width?: number;
+  height?: number;
 }
 
 export interface CloudinaryUploadResponse {
@@ -43,6 +45,67 @@ export function validateImageFile(
   }
 
   return { valid: true };
+}
+
+/**
+ * Reads the width and height of an image file using browser Image decoding.
+ */
+export function getImageDimensions(file: File): Promise<{ width: number; height: number }> {
+  return new Promise((resolve, reject) => {
+    if (typeof window === "undefined" || !window.URL || typeof Image === "undefined") {
+      resolve({ width: 1200, height: 675 });
+      return;
+    }
+
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+
+    img.onload = () => {
+      const width = img.naturalWidth || img.width;
+      const height = img.naturalHeight || img.height;
+      URL.revokeObjectURL(objectUrl);
+      resolve({ width, height });
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Unable to decode image file. The file may be corrupt or formatted improperly."));
+    };
+
+    img.src = objectUrl;
+  });
+}
+
+/**
+ * Validates whether an image's dimensions match a required 16:9 aspect ratio.
+ * Standard recommended product dimensions: 1200 × 675 pixels.
+ */
+export function validateProductAspectRatio(
+  width: number,
+  height: number,
+  requiredRatio: number = 16 / 9,
+  tolerance: number = 0.03
+): ImageValidationResult {
+  if (!width || !height || height === 0) {
+    return {
+      valid: false,
+      error: "Unable to determine image dimensions. Please select a valid image file.",
+    };
+  }
+
+  const actualRatio = width / height;
+  const diff = Math.abs(actualRatio - requiredRatio);
+
+  if (diff > tolerance) {
+    return {
+      valid: false,
+      error: `Invalid image size. Please upload a product image with a 16:9 aspect ratio, such as 1200 × 675 pixels. Selected image: ${width} × ${height} px. Required aspect ratio: 16:9.`,
+      width,
+      height,
+    };
+  }
+
+  return { valid: true, width, height };
 }
 
 /**

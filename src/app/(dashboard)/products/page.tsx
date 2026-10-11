@@ -12,6 +12,7 @@ import {
   Upload,
   Coffee,
   Check,
+  AlertCircle,
 } from "lucide-react";
 import {
   subscribeToProducts,
@@ -54,6 +55,7 @@ export default function ProductsPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [availableQuantity, setAvailableQuantity] = useState<number>(0);
   const [sizes, setSizes] = useState<string[]>(["S", "M", "L"]);
+  const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -79,10 +81,11 @@ export default function ProductsPage() {
     setDescription("");
     setPrice("4.99");
     setCategory("coffee");
-    setImage("/images/appicon_large_size_final.png");
+    setImage("");
     setSelectedFile(null);
     setAvailableQuantity(0);
     setSizes(["S", "M", "L"]);
+    setFormError(null);
     setIsModalOpen(true);
   };
 
@@ -92,47 +95,59 @@ export default function ProductsPage() {
     setDescription(product.description);
     setPrice(String(product.price));
     setCategory(product.category || "coffee");
-    setImage(product.image || "/images/appicon_large_size_final.png");
+    setImage(product.image || "");
     setSelectedFile(null);
     setAvailableQuantity(product.availableQuantity !== undefined ? product.availableQuantity : (product.isAvailable !== false ? 10 : 0));
     setSizes(product.sizes || ["S", "M", "L"]);
+    setFormError(null);
     setIsModalOpen(true);
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !price) return;
-    setIsSubmitting(true);
+    setFormError(null);
 
+    if (!title.trim() || !price.trim()) {
+      setFormError("Product title and price are required.");
+      return;
+    }
+
+    if (!image || image.trim() === "") {
+      setFormError("A valid 16:9 product image is required. Please upload a product image from your device before saving.");
+      return;
+    }
+
+    setIsSubmitting(true);
     const qty = Math.max(0, Math.floor(availableQuantity));
 
     try {
       if (editingProduct) {
         await updateProduct(editingProduct.id, {
-          title,
-          description,
+          title: title.trim(),
+          description: description.trim(),
           price,
           category,
-          image: image || "/images/appicon_large_size_final.png",
+          image,
           sizes,
           availableQuantity: qty,
           isAvailable: qty > 0,
         });
       } else {
         await createProduct({
-          title,
-          description,
+          title: title.trim(),
+          description: description.trim(),
           price,
           category,
-          image: image || "/images/appicon_large_size_final.png",
+          image,
           sizes,
           availableQuantity: qty,
           isAvailable: qty > 0,
         });
       }
       setIsModalOpen(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error saving product:", err);
+      setFormError(err?.message || "Failed to save product to Cloud Firestore. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -240,13 +255,13 @@ export default function ProductsPage() {
                   <tr key={product.id} className="hover:bg-[#FAF8F5]/60 transition-colors">
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-xl bg-[#FAF8F5] relative overflow-hidden border border-[#E8E1D9] shrink-0">
+                        <div className="w-16 h-9 rounded-xl bg-[#FAF8F5] relative overflow-hidden border border-[#E8E1D9] shrink-0">
                           <Image
-                            src={product.image}
+                            src={product.image || "/images/appicon_large_size_final.png"}
                             alt={product.title}
                             fill
                             className="object-cover"
-                            sizes="44px"
+                            sizes="64px"
                             unoptimized
                           />
                         </div>
@@ -341,6 +356,13 @@ export default function ProductsPage() {
         maxWidth="lg"
       >
         <form onSubmit={handleFormSubmit} className="space-y-4 text-xs">
+          {formError && (
+            <div className="p-3.5 rounded-xl bg-[#FDE8E8] border border-[#F7B6B6] text-[#C94A4A] flex items-start gap-2.5 font-semibold">
+              <AlertCircle className="w-4 h-4 text-[#C94A4A] shrink-0 mt-0.5" />
+              <span>{formError}</span>
+            </div>
+          )}
+
           <Input
             label="Product Title / Name"
             placeholder="e.g. Hazelnut Caramel Latte"
@@ -400,18 +422,20 @@ export default function ProductsPage() {
             </div>
           </div>
 
-          {/* Cloudinary Image Upload & Device File Picker */}
+          {/* Device File Picker with 16:9 Aspect Ratio Validation */}
           <ImageUploader
-            label="Product Image (Cloudinary Storage)"
-            description="Select an image from your device to display for this SolCafe product."
+            label="Product Image (Required 16:9)"
+            description="Select an image from your device with a 16:9 aspect ratio (e.g. 1200 × 675 px)."
             value={image}
             onChange={(url, file) => {
               if (url !== undefined) setImage(url);
               if (file !== undefined) setSelectedFile(file);
+              setFormError(null);
             }}
             onFileSelect={(file) => setSelectedFile(file)}
             folder="solcafe_products"
-            defaultImage="/images/appicon_large_size_final.png"
+            aspectRatio="wide"
+            require16by9={true}
           />
 
           <div className="flex justify-end gap-3 pt-4 border-t border-[#E8E1D9]">
